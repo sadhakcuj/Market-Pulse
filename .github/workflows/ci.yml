@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t stock-sentiment:ci .
+      - name: Smoke test container
+        run: |
+          docker run -d --name s -p 8000:8000 -e STOCK_API_KEYS=ci-key stock-sentiment:ci
+          for i in $(seq 1 25); do curl -fsS localhost:8000/readyz && break || sleep 1; done

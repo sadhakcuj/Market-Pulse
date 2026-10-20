@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: stock-sentiment
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: STOCK_API_KEYS
+        generateValue: true
+      - key: FINNHUB_API_KEY      # free key from finnhub.io; enables news sentiment
+        sync: false
+      - key: ANTHROPIC_API_KEY    # optional: LLM headline scoring
+        sync: false

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock Sentiment Analyzer</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --muted:#5b6572; --line:#d9dee5; --accent:#2f5bea; --pos:#067647; --neg:#b42318; --neu:#5b6572; --warn:#b54708; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12151a; --card:#1b2027; --ink:#e8ebef; --muted:#9aa5b1; --line:#2f3640; --accent:#7a9bff; --pos:#47cd89; --neg:#f97066; --neu:#9aa5b1; --warn:#fdb022; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; } h2 { font-size:1rem; margin:0 0 8px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .banner { border:1px solid var(--warn); color:var(--warn); border-radius:8px; padding:8px 12px; font-size:.85rem; margin-bottom:16px; }
+  form { display:flex; gap:8px; margin-bottom:16px; }
+  input { flex:1; max-width:200px; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:inherit; font:inherit; text-transform:uppercase; }
+  button { padding:10px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; } input:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .big { font-size:1.75rem; font-weight:700; } .pos { color:var(--pos); } .neg { color:var(--neg); } .neu { color:var(--neu); }
+  dl { display:grid; grid-template-columns:1fr auto; gap:2px 12px; margin:8px 0 0; font-size:.9rem; } dt { color:var(--muted); } dd { margin:0; text-align:right; }
+  svg { width:100%; height:180px; } .line { fill:none; stroke:var(--accent); stroke-width:2; }
+  ul { list-style:none; padding:0; margin:0; } li { padding:8px 0; border-top:1px solid var(--line); font-size:.9rem; } li:first-child { border-top:0; }
+  li a { color:inherit; } .meta { color:var(--muted); font-size:.75rem; }
+  .note { color:var(--muted); font-size:.85rem; margin-top:8px; } #err { color:var(--neg); margin-bottom:8px; }
+  .wide { grid-column:1/-1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stock Sentiment Analyzer</h1>
+  <p class="sub">Price technicals, live news sentiment, and a direction model that is tested honestly.</p>
+  <div class="banner" role="note">Educational use only. Not investment advice. See "Model validation" below for what the model can and cannot do.</div>
+  <form id="form">
+    <input id="ticker" value="AAPL" maxlength="10" aria-label="Ticker symbol" required autocomplete="off">
+    <button id="go" type="submit">Analyze</button>
+  </form>
+  <div id="err" role="alert"></div>
+  <div class="grid" id="out" hidden>
+    <section class="card"><h2 id="t-name"></h2><div class="big" id="price"></div><div id="chg"></div><dl id="tech"></dl></section>
+    <section class="card"><h2>News sentiment</h2><div class="big" id="s-label"></div><div id="s-detail" class="meta"></div><div class="note" id="s-note"></div></section>
+    <section class="card"><h2>Model signal</h2><div class="big" id="sig"></div><div class="note" id="sig-note"></div></section>
+    <section class="card wide"><h2>Price, last 6 months</h2><svg id="chart" viewBox="0 0 600 180" preserveAspectRatio="none" role="img" aria-label="Price chart"></svg></section>
+    <section class="card wide"><h2>Recent headlines</h2><ul id="news"></ul></section>
+  </div>
+  <section class="card" style="margin-top:12px"><h2>Model validation</h2><div id="val" class="note">Loading…</div></section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const cls = (v) => v > 0 ? "pos" : v < 0 ? "neg" : "neu";
+const fmt = (v, s = "") => v == null ? "n/a" : v + s;
+const txt = (el, t, c) => { el.textContent = t; if (c) el.className = (el.className.split(" ")[0] || "") + " " + c; };
+
+async function get(url) {
+  const r = await fetch(url); const d = await r.json();
+  if (!r.ok) throw new Error(r.status === 429 ? "Too many requests. Wait a minute and retry." : (typeof d.detail === "string" ? d.detail : "Request failed"));
+  return d;
+}
+function chart(closes) {
+  const min = Math.min(...closes), max = Math.max(...closes), n = closes.length;
+  const pts = closes.map((c, i) => `${(i / (n - 1) * 600).toFixed(1)},${(170 - (c - min) / (max - min || 1) * 160).toFixed(1)}`).join(" ");
+  $("chart").innerHTML = `<polyline class="line" points="${pts}"/>`;
+}
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("err").textContent = ""; $("go").disabled = true;
+  const t = encodeURIComponent($("ticker").value.trim());
+  try {
+    const [a, h] = await Promise.all([get(`/demo/analyze/${t}`), get(`/demo/history/${t}`)]);
+    $("out").hidden = false;
+    const tc = a.technicals;
+    txt($("t-name"), a.ticker + " · as of " + tc.as_of); txt($("price"), "$" + tc.price.toFixed(2));
+    txt($("chg"), `${tc.change_1d_pct >= 0 ? "+" : ""}${tc.change_1d_pct}% today · ${tc.change_21d_pct >= 0 ? "+" : ""}${tc.change_21d_pct}% 21d`, cls(tc.change_1d_pct));
+    $("tech").replaceChildren(...[["RSI (14)", fmt(tc.rsi_14)], ["vs 10-day avg", fmt(tc.ma10_gap_pct, "%")], ["vs 50-day avg", fmt(tc.ma50_gap_pct, "%")], ["Daily volatility", fmt(tc.volatility_21d_pct, "%")]]
+      .flatMap(([k, v]) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; return [dt, dd]; }));
+    const s = a.sentiment;
+    if (s.available) { txt($("s-label"), s.label ? s.label[0].toUpperCase() + s.label.slice(1) : "n/a", s.label === "positive" ? "pos" : s.label === "negative" ? "neg" : "neu");
+      txt($("s-detail"), `score ${s.score} · ${s.counts.positive}↑ ${s.counts.neutral}• ${s.counts.negative}↓ · scored by ${s.scorer}`); }
+    else { txt($("s-label"), "Unavailable", "neu"); txt($("s-detail"), ""); }
+    txt($("s-note"), s.note || "");
+    const g = a.signal;
+    txt($("sig"), g.available ? (g.probability_up * 100).toFixed(1) + "% up" : "No signal", "neu");
+    txt($("sig-note"), g.note + (g.available && !g.validated ? " (Not validated.)" : ""));
+    $("news").replaceChildren(...s.headlines.slice(0, 10).map((x) => { const li = document.createElement("li"), link = document.createElement("a"), m = document.createElement("div");
+      link.textContent = x.headline; link.href = /^https?:/.test(x.url) ? x.url : "#"; link.target = "_blank"; link.rel = "noopener noreferrer";
+      m.className = "meta"; m.textContent = `${x.source} · ${x.label} (${x.score})`; li.append(link, m); return li; }));
+    chart(h.closes);
+  } catch (err) { $("err").textContent = err.message; } finally { $("go").disabled = false; }
+});
+fetch("/v1/model").then((r) => r.json()).then((m) => {
+  if (!m.loaded) { $("val").textContent = "No trained model is loaded."; return; }
+  const r = m.results[m.model];
+  $("val").textContent = `${m.verdict} Walk-forward accuracy ${(r.accuracy_mean * 100).toFixed(1)}% (majority-direction baseline ${(r.majority_class_rate * 100).toFixed(1)}%), AUC ${r.auc_mean}, tested on ${r.oos_samples} out-of-sample days across ${m.tickers.length} stocks.`;
+}).catch(() => { $("val").textContent = "Validation details unavailable."; });
+</script>
+</body>
+</html>
