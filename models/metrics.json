@@ -11,8 +11,8 @@
   ],
   "rows": 8024,
   "date_range": [
-    "2022-10-24",
-    "2026-10-22"
+    "2022-10-31",
+    "2026-10-29"
   ],
   "walk_forward": {
     "splits": 6,
@@ -26,66 +26,66 @@
   "results": {
     "logreg": {
       "folds": 6,
-      "accuracy_mean": 0.5347,
-      "accuracy_std": 0.0256,
-      "balanced_accuracy_mean": 0.5011,
-      "auc_mean": 0.4901,
-      "folds_with_auc_above_0.5": 3,
-      "pooled_accuracy": 0.5347,
-      "majority_class_rate": 0.5361,
-      "p_value_vs_majority": 0.5669,
+      "accuracy_mean": 0.5361,
+      "accuracy_std": 0.0272,
+      "balanced_accuracy_mean": 0.5013,
+      "auc_mean": 0.4919,
+      "folds_with_auc_above_0.5": 4,
+      "pooled_accuracy": 0.5361,
+      "majority_class_rate": 0.5375,
+      "p_value_vs_majority": 0.567,
       "oos_samples": 2880,
-      "strategy_sharpe_net_of_costs": 2.505,
-      "buy_and_hold_sharpe": 2.689
+      "strategy_sharpe_net_of_costs": 2.374,
+      "buy_and_hold_sharpe": 2.615
     },
     "hist_gb": {
       "folds": 6,
-      "accuracy_mean": 0.5292,
-      "accuracy_std": 0.0173,
-      "balanced_accuracy_mean": 0.509,
-      "auc_mean": 0.5084,
-      "folds_with_auc_above_0.5": 3,
-      "pooled_accuracy": 0.5292,
-      "majority_class_rate": 0.5361,
-      "p_value_vs_majority": 0.7782,
+      "accuracy_mean": 0.5312,
+      "accuracy_std": 0.0186,
+      "balanced_accuracy_mean": 0.5107,
+      "auc_mean": 0.5085,
+      "folds_with_auc_above_0.5": 4,
+      "pooled_accuracy": 0.5312,
+      "majority_class_rate": 0.5375,
+      "p_value_vs_majority": 0.7554,
       "oos_samples": 2880,
-      "strategy_sharpe_net_of_costs": 2.512,
-      "buy_and_hold_sharpe": 2.689,
+      "strategy_sharpe_net_of_costs": 2.292,
+      "buy_and_hold_sharpe": 2.615,
       "p_value_adjusted": 1.0
     },
     "baseline_always_up": {
       "folds": 6,
-      "accuracy_mean": 0.5361,
-      "accuracy_std": 0.0237,
+      "accuracy_mean": 0.5375,
+      "accuracy_std": 0.0261,
       "balanced_accuracy_mean": 0.5,
       "auc_mean": 0.5,
       "folds_with_auc_above_0.5": 0,
-      "pooled_accuracy": 0.5361,
-      "majority_class_rate": 0.5361,
+      "pooled_accuracy": 0.5375,
+      "majority_class_rate": 0.5375,
       "p_value_vs_majority": 0.5076,
       "oos_samples": 2880,
-      "strategy_sharpe_net_of_costs": 2.686,
-      "buy_and_hold_sharpe": 2.689
+      "strategy_sharpe_net_of_costs": 2.612,
+      "buy_and_hold_sharpe": 2.615
     },
     "baseline_momentum": {
       "folds": 6,
-      "accuracy_mean": 0.4976,
-      "accuracy_std": 0.0298,
-      "balanced_accuracy_mean": 0.4936,
-      "auc_mean": 0.4936,
+      "accuracy_mean": 0.4997,
+      "accuracy_std": 0.0227,
+      "balanced_accuracy_mean": 0.4952,
+      "auc_mean": 0.4952,
       "folds_with_auc_above_0.5": 3,
-      "pooled_accuracy": 0.4976,
-      "majority_class_rate": 0.5361,
+      "pooled_accuracy": 0.4997,
+      "majority_class_rate": 0.5375,
       "p_value_vs_majority": 1.0,
       "oos_samples": 2880,
-      "strategy_sharpe_net_of_costs": 0.961,
-      "buy_and_hold_sharpe": 2.689
+      "strategy_sharpe_net_of_costs": 0.898,
+      "buy_and_hold_sharpe": 2.615
     }
   },
   "environment": {
-    "python": "3.13.16",
+    "python": "3.13.17",
     "scikit_learn": "1.9.1"
   },
-  "trained_at": "2026-10-25T08:15:32.705781+00:00",
+  "trained_at": "2026-11-01T10:16:36.240788+00:00",
   "disclaimer": "Research and education only. Not investment advice. Past performance does not predict future results."
 }
